@@ -106,6 +106,9 @@ type Config struct {
 	RFC2136TSIGSecret        string
 	RFC2136TSIGSecretAlg     string
 	RFC2136TAXFR             bool
+
+	INWXUsername string
+	INWXPassword string
 }
 
 var defaultConfig = &Config{
@@ -173,6 +176,8 @@ var defaultConfig = &Config{
 	RFC2136TSIGSecret:        "",
 	RFC2136TSIGSecretAlg:     "",
 	RFC2136TAXFR:             true,
+	INWXUsername:             "",
+	INWXPassword:             "",
 }
 
 // NewConfig returns new Config object
@@ -234,7 +239,7 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("service-type-filter", "The service types to take care about (default: all, expected: ClusterIP, NodePort, LoadBalancer or ExternalName)").StringsVar(&cfg.ServiceTypeFilter)
 
 	// Flags related to providers
-	app.Flag("provider", "The DNS provider where the DNS records will be created (required, options: aws, aws-sd, google, azure, cloudflare, digitalocean, dnsimple, infoblox, dyn, designate, coredns, skydns, inmemory, pdns, oci, exoscale, linode, rfc2136)").Required().PlaceHolder("provider").EnumVar(&cfg.Provider, "aws", "aws-sd", "google", "azure", "alibabacloud", "cloudflare", "digitalocean", "dnsimple", "infoblox", "dyn", "designate", "coredns", "skydns", "inmemory", "pdns", "oci", "exoscale", "linode", "rfc2136")
+	app.Flag("provider", "The DNS provider where the DNS records will be created (required, options: aws, aws-sd, google, azure, cloudflare, digitalocean, dnsimple, infoblox, dyn, designate, coredns, skydns, inmemory, pdns, oci, exoscale, linode, rfc2136, inwx)").Required().PlaceHolder("provider").EnumVar(&cfg.Provider, "aws", "aws-sd", "google", "azure", "alibabacloud", "cloudflare", "digitalocean", "dnsimple", "infoblox", "dyn", "designate", "coredns", "skydns", "inmemory", "pdns", "oci", "exoscale", "linode", "rfc2136", "inwx")
 	app.Flag("domain-filter", "Limit possible target zones by a domain suffix; specify multiple times for multiple domains (optional)").Default("").StringsVar(&cfg.DomainFilter)
 	app.Flag("zone-id-filter", "Filter target zones by hosted zone id; specify multiple times for multiple zones (optional)").Default("").StringsVar(&cfg.ZoneIDFilter)
 	app.Flag("google-project", "When using the Google provider, current project is auto-detected, when running on GCP. Specify other project with this. Must be specified when running outside GCP.").Default(defaultConfig.GoogleProject).StringVar(&cfg.GoogleProject)
@@ -302,6 +307,10 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("log-format", "The format in which log messages are printed (default: text, options: text, json)").Default(defaultConfig.LogFormat).EnumVar(&cfg.LogFormat, "text", "json")
 	app.Flag("metrics-address", "Specify where to serve the metrics and health check endpoint (default: :7979)").Default(defaultConfig.MetricsAddress).StringVar(&cfg.MetricsAddress)
 	app.Flag("log-level", "Set the level of logging. (default: info, options: panic, debug, info, warning, error, fatal").Default(defaultConfig.LogLevel).EnumVar(&cfg.LogLevel, allLogLevelsAsStrings()...)
+
+	// Flags related to INWX provider
+	app.Flag("inwx-username", "When using the INWX provider, specify the host of the DNS server").Default(defaultConfig.INWXUsername).StringVar(&cfg.INWXUsername)
+	app.Flag("inwx-password", "When using the INWX provider, specify the host of the DNS server").Default(defaultConfig.INWXPassword).StringVar(&cfg.INWXPassword)
 
 	_, err := app.Parse(args)
 	if err != nil {

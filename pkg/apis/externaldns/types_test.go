@@ -77,6 +77,8 @@ var (
 		ExoscaleAPISecret:       "",
 		CRDSourceAPIVersion:     "externaldns.k8s.io/v1alpha",
 		CRDSourceKind:           "DNSEndpoint",
+		INWXUsername:            "",
+		INWXPassword:            "",
 	}
 
 	overriddenConfig = &Config{
@@ -132,6 +134,8 @@ var (
 		ExoscaleAPISecret:       "2",
 		CRDSourceAPIVersion:     "test.k8s.io/v1alpha1",
 		CRDSourceKind:           "Endpoint",
+		INWXUsername:            "inwx-username",
+		INWXPassword:            "inwx-password",
 	}
 )
 
@@ -210,6 +214,8 @@ func TestParseFlags(t *testing.T) {
 				"--exoscale-apisecret=2",
 				"--crd-source-apiversion=test.k8s.io/v1alpha1",
 				"--crd-source-kind=Endpoint",
+				"--inwx-username=inwx-username",
+				"--inwx-password=inwx-password",
 			},
 			envVars:  map[string]string{},
 			expected: overriddenConfig,
@@ -269,6 +275,8 @@ func TestParseFlags(t *testing.T) {
 				"EXTERNAL_DNS_EXOSCALE_APISECRET":         "2",
 				"EXTERNAL_DNS_CRD_SOURCE_APIVERSION":      "test.k8s.io/v1alpha1",
 				"EXTERNAL_DNS_CRD_SOURCE_KIND":            "Endpoint",
+				"EXTERNAL_DNS_INWX_USERNAME":              "inwx-username",
+				"EXTERNAL_DNS_INWX_PASSWORD":              "inwx-password",
 			},
 			expected: overriddenConfig,
 		},
