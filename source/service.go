@@ -316,7 +316,19 @@ func (sc *serviceSource) generateEndpoints(svc *v1.Service, hostname string, nod
 
 	switch svc.Spec.Type {
 	case v1.ServiceTypeLoadBalancer:
-		targets = append(targets, extractLoadBalancerTargets(svc)...)
+		if types := getTypesFromAnnotations(svc.Annotations); types == nil {
+			targets = append(targets, extractLoadBalancerTargets(svc)...)
+		} else {
+			for _, rrType := range types {
+				switch rrType {
+				case "SRV":
+					endpoints = append(endpoints, sc.extractLoadBalancerEndpoints(svc, hostname, ttl)...)
+				default:
+					targets = append(targets, extractLoadBalancerTargets(svc)...)
+				}
+			}
+
+		}
 	case v1.ServiceTypeClusterIP:
 		if sc.publishInternal {
 			targets = append(targets, extractServiceIps(svc)...)
