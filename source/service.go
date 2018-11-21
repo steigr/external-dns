@@ -441,3 +441,45 @@ func (sc *serviceSource) extractNodePortEndpoints(svc *v1.Service, nodeTargets e
 
 	return endpoints
 }
+
+func (sc *serviceSource) extractLoadBalancerEndpoints(svc *v1.Service, hostname string, ttl endpoint.TTL) []*endpoint.Endpoint {
+	var endpoints []*endpoint.Endpoint
+	var serviceDomains []string
+	if serviceDomains = getServiceDomainsFromAnnotations(svc.Annotations); serviceDomains == nil {
+		serviceDomains = []string{hostname}
+	}
+
+	for _, serviceDomain := range serviceDomains {
+		for _, port := range svc.Spec.Ports {
+			if port.Port > 0 {
+				// build a target with a priority of 0, weight of 0, and pointing the given port on the given host
+				target := fmt.Sprintf("0 50 %d %s", port.Port, hostname)
+
+				// figure out the portname
+				portName := port.Name
+				if portName == "" {
+					portName = fmt.Sprintf("%d", port.Port)
+				}
+
+				// figure out the protocol
+				protocol := strings.ToLower(string(port.Protocol))
+				if protocol == "" {
+					protocol = "tcp"
+				}
+
+				recordName := fmt.Sprintf("_%s._%s.%s", portName, protocol, serviceDomain)
+
+				var ep *endpoint.Endpoint
+				if ttl.IsConfigured() {
+					ep = endpoint.NewEndpointWithTTL(recordName, endpoint.RecordTypeSRV, ttl, target)
+				} else {
+					ep = endpoint.NewEndpoint(recordName, endpoint.RecordTypeSRV, target)
+				}
+
+				endpoints = append(endpoints, ep)
+			}
+		}
+	}
+
+	return endpoints
+}
