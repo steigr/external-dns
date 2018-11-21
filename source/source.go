@@ -37,6 +37,10 @@ const (
 	ttlAnnotationKey = "external-dns.alpha.kubernetes.io/ttl"
 	// The annotation used for switching to the alias record types e. g. AWS Alias records instead of a normal CNAME
 	aliasAnnotationKey = "external-dns.alpha.kubernetes.io/alias"
+	// The annotation used for switching the record types e. g. derive SRV and A Records
+	typesAnnotationKey = "external-dns.alpha.kubernetes.io/types"
+	// The annotation used for assigning services to domains
+	serviceDomainsAnnotationKey = "external-dns.alpha.kubernetes.io/service-domains"
 	// The value of the controller annotation so that we feel responsible
 	controllerAnnotationValue = "dns-controller"
 )
@@ -79,6 +83,22 @@ func getHostnamesFromAnnotations(annotations map[string]string) []string {
 func getAliasFromAnnotations(annotations map[string]string) bool {
 	aliasAnnotation, exists := annotations[aliasAnnotationKey]
 	return exists && aliasAnnotation == "true"
+}
+
+func getTypesFromAnnotations(annotations map[string]string) []string {
+	typesAnnotation, exists := annotations[typesAnnotationKey]
+	if !exists {
+		return nil
+	}
+	return strings.Split(strings.Replace(typesAnnotation, " ", "", -1), ",")
+}
+
+func getServiceDomainsFromAnnotations(annotations map[string]string) []string {
+	serviceDomainsAnnotation, exists := annotations[serviceDomainsAnnotationKey]
+	if !exists {
+		return nil
+	}
+	return strings.Split(strings.Replace(serviceDomainsAnnotation, " ", "", -1), ",")
 }
 
 func getProviderSpecificAnnotations(annotations map[string]string) endpoint.ProviderSpecific {
