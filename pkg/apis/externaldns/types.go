@@ -197,6 +197,9 @@ func (cfg *Config) String() string {
 	if temp.PDNSAPIKey != "" {
 		temp.PDNSAPIKey = ""
 	}
+	if temp.INWXPassword != "" {
+		temp.INWXPassword = passwordMask
+	}
 
 	return fmt.Sprintf("%+v", temp)
 }
