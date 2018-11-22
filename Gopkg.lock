@@ -205,6 +205,14 @@
   version = "v0.11.0"
 
 [[projects]]
+  digest = "1:2defd14040b1ca18840524e9d0f9cfab0ea8d2f2d396b343d221f8bc8e21ab9d"
+  name = "github.com/fatih/structs"
+  packages = ["."]
+  pruneopts = ""
+  revision = "4966fc68f5b7593aafa6cbbba2d65ec6e1416047"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:ae7fb2062735e966ab69d14d2a091f3778b0d676dc8d1f01d092bcb0fb8ed45b"
   name = "github.com/ffledgling/pdns-go"
@@ -432,6 +440,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:a92cc66c45dd3eea591d957934e2615be0fcf5b59bb15cbe49e3a1784ff01c40"
+  name = "github.com/kolo/xmlrpc"
+  packages = ["."]
+  pruneopts = ""
+  revision = "16bdd962781df9696f40cc2bab924f1a855a7f89"
+
+[[projects]]
+  branch = "master"
   digest = "1:fd50e2c52f29bb81f9a172f0d5aee1438b201ca0502ff3a20ebbe9629e274875"
   name = "github.com/kubernetes/repo-infra"
   packages = ["verify/boilerplate/test"]
@@ -469,6 +485,14 @@
   pruneopts = ""
   revision = "5a2b9fab83ff0f8bfc99684bd5f43a37abe560f1"
   version = "v1.0.8"
+
+[[projects]]
+  digest = "1:bcc46a0fbd9e933087bef394871256b5c60269575bb661935874729c65bbbf60"
+  name = "github.com/mitchellh/mapstructure"
+  packages = ["."]
+  pruneopts = ""
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
+  version = "v1.1.2"
 
 [[projects]]
   digest = "1:0c0ff2a89c1bb0d01887e1dac043ad7efbf3ec77482ef058ac423d13497e16fd"
@@ -600,6 +624,14 @@
   pruneopts = ""
   revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
   version = "v1.0.3"
+
+[[projects]]
+  digest = "1:1bd6a968fa3d17317d5227d1db47b86703a8baa9b45b210eb11dd21dc76723db"
+  name = "github.com/smueller18/goinwx"
+  packages = ["."]
+  pruneopts = ""
+  revision = "4dce1088ed8c6ee489b6f23ed693d3348207e55e"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:a1403cc8a94b8d7956ee5e9694badef0e7b051af289caad1cf668331e3ffa4f6"
@@ -1127,6 +1159,7 @@
     "github.com/aws/aws-sdk-go/service/servicediscovery",
     "github.com/cloudflare/cloudflare-go",
     "github.com/coreos/etcd/clientv3",
+    "github.com/davecgh/go-spew/spew",
     "github.com/denverdino/aliyungo/metadata",
     "github.com/digitalocean/godo",
     "github.com/digitalocean/godo/context",
@@ -1150,6 +1183,7 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/sirupsen/logrus",
+    "github.com/smueller18/goinwx",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
