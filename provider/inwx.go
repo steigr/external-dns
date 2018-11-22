@@ -17,6 +17,7 @@ limitations under the License.
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/kubernetes-incubator/external-dns/endpoint"
@@ -68,14 +69,18 @@ func (p *inwxProvider) Records() ([]*endpoint.Endpoint, error) {
 		return nil, err
 	}
 	for _, record := range records {
-		if strings.Compare(record.Type, "SRV") == 0 {
-			record.Content = strings.Join([]string{fmt.Sprintf("%d", record.Prio), record.Content}, " ")
-		}
-		endpoints = append(endpoints, endpoint.NewEndpointWithTTL(record.Name, record.Type, endpoint.TTL(record.Ttl), record.Content).WithProviderSpecific("Id", fmt.Sprintf("%d", record.Id)))
-		if strings.Compare(record.Type, "SRV") == 0 {
-			record.Content = strings.Join([]string{fmt.Sprintf("%d", record.Prio), record.Content}, " ")
+		switch record.Type {
+		case endpoint.RecordTypeA, endpoint.RecordTypeCNAME, endpoint.RecordTypeSRV, endpoint.RecordTypeTXT:
+			if strings.Compare(record.Type, "SRV") == 0 {
+				record.Content = strings.Join([]string{fmt.Sprintf("%d", record.Prio), record.Content}, " ")
+			}
+			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(record.Name, record.Type, endpoint.TTL(record.Ttl), record.Content).WithProviderSpecific("Id", fmt.Sprintf("%d", record.Id)))
+			if strings.Compare(record.Type, "SRV") == 0 {
+				record.Content = strings.Join([]string{fmt.Sprintf("%d", record.Prio), record.Content}, " ")
+			}
 		}
 	}
+	log.Debugf(spew.Sdump(endpoints))
 	return endpoints, nil
 }
 
@@ -87,9 +92,32 @@ func (p *inwxProvider) ApplyChanges(changes *plan.Changes) error {
 	} else {
 		return err
 	}
-	for _, deleteChange := range changes.Delete {
+	for _, ep := range changes.Delete {
 		log.Debugf("Delete Change")
-		log.Debugf(spew.Sdump(deleteChange))
+		for _, target := range ep.Targets {
+			log.Debugf(spew.Sdump(ep))
+			var (
+				err error
+				id  int
+			)
+
+			if len(ep.ProviderSpecific["Id"]) == 0 {
+				id, err = p.getIdByNameAndContent(ep.DNSName, ep.RecordType, target)
+			} else {
+				id, err = p.parseInt(ep.ProviderSpecific["Id"])
+			}
+
+			if err != nil {
+				log.Debugf("%v", err)
+				return err
+			}
+
+			if err = p.client.Nameservers.DeleteRecord(id); err != nil {
+				log.Debugf("Record %d cannot be deleted", id)
+				return err
+			}
+
+		}
 	}
 	for _, ep := range changes.Create {
 		log.Debugf(spew.Sdump(ep))
@@ -103,14 +131,9 @@ func (p *inwxProvider) ApplyChanges(changes *plan.Changes) error {
 			}
 		}
 		for _, target := range ep.Targets {
-			prio := 0
-			if ep.RecordType == endpoint.RecordTypeSRV {
-				segments := strings.Split(target, " ")
-				p, e := strconv.ParseInt(segments[0], 10, 32)
-				if e == nil {
-					prio = int(p)
-				}
-				target = strings.Join(segments[1:], " ")
+			target, prio, err := p.getTargetAndPriorityFromTypeAndTarget(ep.RecordType, target)
+			if err != nil {
+				return err
 			}
 			request := &goinwx.NameserverRecordRequest{
 				Domain:   domain,
@@ -176,4 +199,56 @@ func (p *inwxProvider) getDomainOf(name string) string {
 		}
 	}
 	return ""
+}
+
+func (p *inwxProvider) getIdByNameAndContent(name, recordType, target string) (id int, err error) {
+	target, prio, err := p.getTargetAndPriorityFromTypeAndTarget(recordType, target)
+	if err != nil {
+		return 0, err
+	}
+	request := &goinwx.NameserverInfoRequest{
+		Domain:  p.getDomainOf(name),
+		Type:    recordType,
+		Content: target,
+		Prio:    prio,
+		Name:    name,
+	}
+	log.Debugf(spew.Sdump(request))
+	response, err := p.client.Nameservers.Info(request)
+	log.Debugf(spew.Sdump(response))
+	log.Debugf(spew.Sdump(len(response.Records)))
+
+	if err != nil {
+		return 0, err
+	}
+
+	if len(response.Records) != 1 {
+		return 0, errors.New("Record could not be uniquely identified.")
+	}
+	return response.Records[0].Id, nil
+}
+
+func (p *inwxProvider) getTargetAndPriorityFromTypeAndTarget(recordType, target string) (targetOut string, priority int, err error) {
+	var segments []string
+
+	if strings.Compare(recordType, endpoint.RecordTypeSRV) != 0 {
+		return target, 0, nil
+	}
+	segments = strings.Split(target, " ")
+	target = strings.Join(segments[1:], " ")
+
+	priority, err = p.parseInt(segments[0])
+	if err != nil {
+		return "", 0, err
+	}
+
+	return target, priority, nil
+}
+
+func (p *inwxProvider) parseInt(in string) (int, error) {
+	i64, err := strconv.ParseInt(in, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int(i64), nil
 }
