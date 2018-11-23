@@ -53,8 +53,8 @@ func NewInwxProvider(username string, password string, dryRun bool) (*inwxProvid
 
 // Records returns the list of records.
 func (p *inwxProvider) Records() ([]*endpoint.Endpoint, error) {
+	log.Debugf("inwxProvider.Records()")
 	var endpoints []*endpoint.Endpoint
-	log.Debugf("INWX.Records()")
 	if err := p.login(); err == nil {
 		defer p.logout()
 	} else {
@@ -86,7 +86,7 @@ func (p *inwxProvider) Records() ([]*endpoint.Endpoint, error) {
 
 // ApplyChanges publishes records.
 func (p *inwxProvider) ApplyChanges(changes *plan.Changes) (err error) {
-	log.Debugf("INWX.ApplyChanges()")
+	log.Debugf("inwxProvider.ApplyChanges()")
 	err = p.login()
 	if err == nil {
 		defer p.logout()
@@ -153,14 +153,17 @@ func (p *inwxProvider) ApplyChanges(changes *plan.Changes) (err error) {
 }
 
 func (p *inwxProvider) login() error {
+	log.Debugf("inwxProvider.login()")
 	return p.client.Account.Login()
 }
 
 func (p *inwxProvider) logout() error {
+	log.Debugf("inwxProvider.logout()")
 	return p.client.Account.Logout()
 }
 
 func (p *inwxProvider) getDomains() ([]string, error) {
+	log.Debugf("inwxProvider.getDomains()")
 	var domains []string
 	if inwxNameserverDomains, err := p.client.Nameservers.List(""); err == nil {
 		for _, inwxNameserverDomain := range inwxNameserverDomains.Domains {
@@ -174,12 +177,18 @@ func (p *inwxProvider) getDomains() ([]string, error) {
 }
 
 func (p *inwxProvider) getRecords(domains []string) ([]goinwx.NameserverRecord, error) {
+	log.Debugf("inwxProvider.getRecords()")
 	var records []goinwx.NameserverRecord
 	for _, domain := range domains {
-		if result, err := p.client.Nameservers.Info(&goinwx.NameserverInfoRequest{Domain: domain}); err == nil {
-			records = append(records, result.Records...)
-		} else {
-			return nil, err
+		// we are interested in A/CNAME/TXT/SRV-Records only
+		for _, recordType := range []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME, endpoint.RecordTypeTXT, endpoint.RecordTypeSRV} {
+			request := &goinwx.NameserverInfoRequest{Domain: domain, Type: recordType}
+			if result, err := p.client.Nameservers.Info(request); err == nil {
+				records = append(records, result.Records...)
+			} else {
+				return nil, err
+			}
+
 		}
 	}
 	return records, nil
@@ -187,6 +196,7 @@ func (p *inwxProvider) getRecords(domains []string) ([]goinwx.NameserverRecord, 
 
 // select domain from registered domains
 func (p *inwxProvider) getDomainOf(name string) string {
+	log.Debugf("inwxProvider.getDomainOf()")
 	updated := false
 	for {
 		for _, domain := range p.domains {
@@ -205,6 +215,7 @@ func (p *inwxProvider) getDomainOf(name string) string {
 }
 
 func (p *inwxProvider) getIdByNameAndContent(name, recordType, target string) (id int, err error) {
+	log.Debugf("inwxProvider.getIdByNameAndContent()")
 	target, prio, err := p.getTargetAndPriorityFromTypeAndTarget(recordType, target)
 	if err != nil {
 		return 0, err
@@ -230,6 +241,7 @@ func (p *inwxProvider) getIdByNameAndContent(name, recordType, target string) (i
 }
 
 func (p *inwxProvider) getTargetAndPriorityFromTypeAndTarget(recordType, target string) (targetOut string, priority int, err error) {
+	log.Debugf("inwxProvider.getTargetAndPriorityFromTypeAndTarget()")
 	var segments []string
 
 	if strings.Compare(recordType, endpoint.RecordTypeSRV) != 0 {
@@ -247,6 +259,7 @@ func (p *inwxProvider) getTargetAndPriorityFromTypeAndTarget(recordType, target 
 }
 
 func (p *inwxProvider) parseInt(in string) (int, error) {
+	log.Debugf("inwxProvider.parseInt()")
 	i64, err := strconv.ParseInt(in, 10, 32)
 	if err != nil {
 		return 0, err

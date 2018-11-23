@@ -117,5 +117,5 @@ ignored = ["github.com/kubernetes/repo-infra/kazel"]
   version = "1.0.8"
 
 [[constraint]]
-  name = "github.com/smueller18/goinwx"
-  version = "0.4.0"
+  name = "github.com/steigr/goinwx"
+  branch = "bugfix/url-record-type"
