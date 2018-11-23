@@ -85,17 +85,17 @@ func (p *inwxProvider) Records() ([]*endpoint.Endpoint, error) {
 }
 
 // ApplyChanges publishes records.
-func (p *inwxProvider) ApplyChanges(changes *plan.Changes) error {
+func (p *inwxProvider) ApplyChanges(changes *plan.Changes) (err error) {
 	log.Debugf("INWX.ApplyChanges()")
-	if err := p.login(); err == nil {
+	err = p.login()
+	if err == nil {
 		defer p.logout()
 	} else {
 		return err
 	}
 	for _, ep := range changes.Delete {
-		log.Debugf("Delete Change")
+		log.Debugf("Delete Change: %v", ep)
 		for _, target := range ep.Targets {
-			log.Debugf(spew.Sdump(ep))
 			var (
 				err error
 				id  int
@@ -120,15 +120,11 @@ func (p *inwxProvider) ApplyChanges(changes *plan.Changes) error {
 		}
 	}
 	for _, ep := range changes.Create {
-		log.Debugf(spew.Sdump(ep))
+		log.Debugf("Create Change: %v", ep)
 		domain := p.getDomainOf(ep.DNSName)
 		if len(domain) == 0 {
-			p.getDomains()
-			domain = p.getDomainOf(ep.DNSName)
-			if len(domain) == 0 {
-				log.Debugf("Endpoint for %s cannot be created", ep.DNSName)
-				continue
-			}
+			log.Debugf("Endpoint for %s cannot be created", ep.DNSName)
+			continue
 		}
 		for _, target := range ep.Targets {
 			target, prio, err := p.getTargetAndPriorityFromTypeAndTarget(ep.RecordType, target)
@@ -149,9 +145,9 @@ func (p *inwxProvider) ApplyChanges(changes *plan.Changes) error {
 			}
 		}
 	}
+	// TODO: Implement update function
 	for _, updateChange := range changes.UpdateNew {
-		log.Debugf("Updating Change")
-		log.Debugf(spew.Sdump(updateChange))
+		log.Debugf("Updating Change: %v", updateChange)
 	}
 	return nil
 }
@@ -191,12 +187,19 @@ func (p *inwxProvider) getRecords(domains []string) ([]goinwx.NameserverRecord, 
 
 // select domain from registered domains
 func (p *inwxProvider) getDomainOf(name string) string {
-
-	for _, domain := range p.domains {
-
-		if strings.HasSuffix("."+name, "."+domain) {
-			return domain
+	updated := false
+	for {
+		for _, domain := range p.domains {
+			if strings.HasSuffix("."+name, "."+domain) {
+				return domain
+			}
 		}
+		if updated {
+			break
+		} else {
+			p.getDomains()
+		}
+		updated = true
 	}
 	return ""
 }
@@ -213,10 +216,8 @@ func (p *inwxProvider) getIdByNameAndContent(name, recordType, target string) (i
 		Prio:    prio,
 		Name:    name,
 	}
-	log.Debugf(spew.Sdump(request))
+
 	response, err := p.client.Nameservers.Info(request)
-	log.Debugf(spew.Sdump(response))
-	log.Debugf(spew.Sdump(len(response.Records)))
 
 	if err != nil {
 		return 0, err
