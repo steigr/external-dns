@@ -626,12 +626,11 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:1bd6a968fa3d17317d5227d1db47b86703a8baa9b45b210eb11dd21dc76723db"
-  name = "github.com/smueller18/goinwx"
+  name = "github.com/steigr/goinwx"
   packages = ["."]
   pruneopts = ""
-  revision = "4dce1088ed8c6ee489b6f23ed693d3348207e55e"
-  version = "v0.4.0"
+  revision = "081eee54b276eb982d2cbc17f9b798a5cc8d677e"
+  branch = "bugfix/url-record-type"
 
 [[projects]]
   digest = "1:a1403cc8a94b8d7956ee5e9694badef0e7b051af289caad1cf668331e3ffa4f6"
@@ -1183,7 +1182,7 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/sirupsen/logrus",
-    "github.com/smueller18/goinwx",
+    "github.com/steigr/goinwx",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
