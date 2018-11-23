@@ -23,7 +23,7 @@ import (
 	"github.com/kubernetes-incubator/external-dns/endpoint"
 	"github.com/kubernetes-incubator/external-dns/plan"
 	log "github.com/sirupsen/logrus"
-	"github.com/smueller18/goinwx"
+	"github.com/steigr/goinwx"
 	"strconv"
 	"strings"
 )
